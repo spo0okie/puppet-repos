@@ -1,6 +1,6 @@
 class repos {
 	case $::operatingsystem {
-		CentOS: {
+		'CentOS': {
 			package {'yum-plugin-priorities': ensure => 'installed'}
 		}
 	}

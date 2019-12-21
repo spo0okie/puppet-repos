@@ -1,6 +1,6 @@
 class repos::ius {
 	case $::operatingsystem {
-		CentOS: {
+		'CentOS': {
 			exec {"install_ius_repo":
 				command => "rpm -i http://centos${::operatingsystemmajrelease}.iuscommunity.org/ius-release.rpm",
 				unless => "rpm -qa | grep ius-release",

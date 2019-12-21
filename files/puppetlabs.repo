@@ -1,7 +1,0 @@
-[puppetlabs]
-name=PuppetLabs official yum repository
-baseurl=http://yum.puppetlabs.com/el/6/products/x86_64/
-enabled=1
-priority=10
-gpgcheck=1
-gpgkey=http://yum.puppetlabs.com/RPM-GPG-KEY-puppetlabs
