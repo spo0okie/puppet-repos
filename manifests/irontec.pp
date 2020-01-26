@@ -2,7 +2,6 @@
 class repos::irontec {
 	include repos
 	file {'/etc/yum.repos.d/irontec.repo':
-		require => Package['yum-plugin-priorities'],
 		source => 'puppet:///modules/repos/irontec.repo',
 		owner => 'root',
 		mode => '0644'

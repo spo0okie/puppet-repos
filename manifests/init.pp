@@ -1,7 +1,11 @@
 class repos {
 	case $::operatingsystem {
 		'CentOS': {
-			package {'yum-plugin-priorities': ensure => 'installed'}
+			case $::operatingsystemmajrelease {
+				6,7: {
+					package {'yum-plugin-priorities': ensure => 'installed'}
+				}
+			}
 		}
 	}
 }
