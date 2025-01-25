@@ -5,6 +5,9 @@ class repos::zabbix {
 #https://www.zabbix.com/documentation/4.4/ru/manual/installation/install_from_packages/debian_ubuntu
 		'Debian': {
 			case $::operatingsystemmajrelease {
+				'12': {
+					$packagename='zabbix-release_7.0-2+debian12_all'
+				}
 				'11': {
 					$packagename='zabbix-release_6.2-1+debian11_all'
 				}
