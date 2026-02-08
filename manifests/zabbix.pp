@@ -6,7 +6,7 @@ class repos::zabbix {
 		'Debian': {
 			case $::operatingsystemmajrelease {
 				'12': {
-					$packagename='zabbix-release_6.4-1+debian12_all'
+					$packagename='zabbix-release_7.0-2+debian12_all'
 				}
 				'11': {
 					$packagename='zabbix-release_6.2-1+debian11_all'
