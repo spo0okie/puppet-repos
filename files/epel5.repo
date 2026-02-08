@@ -1,0 +1,5 @@
+[EPEL5]
+name=EPEL5
+baseurl=http://storage-docker.azimuth.holding.local/epel/5/x86_64/
+gpgcheck=0
+enabled=1

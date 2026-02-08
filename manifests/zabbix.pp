@@ -5,6 +5,9 @@ class repos::zabbix {
 #https://www.zabbix.com/documentation/4.4/ru/manual/installation/install_from_packages/debian_ubuntu
 		'Debian': {
 			case $::operatingsystemmajrelease {
+				'12': {
+					$packagename='zabbix-release_6.4-1+debian12_all'
+				}
 				'11': {
 					$packagename='zabbix-release_6.2-1+debian11_all'
 				}
@@ -24,9 +27,7 @@ class repos::zabbix {
 				path => '/bin:/sbin:/usr/bin:/usr/sbin',
 				cwd => '/tmp',
 			}
-
 		}
-
 
 		'Ubuntu': {
 			case $::operatingsystemmajrelease {
@@ -52,6 +53,43 @@ class repos::zabbix {
 			exec {"install_zabbix_repo":
 				command => "dpkg -i /tmp/$packagename.deb && apt update",
 				unless => "dpkg -l | grep zabbix-release | grep 6.2",
+				path => '/bin:/sbin:/usr/bin:/usr/sbin',
+				cwd => '/tmp',
+			}
+		}
+
+		'SLES': {
+			case $::operatingsystemmajrelease {
+				'15': {
+					$packagename='zabbix-release-6.2-2.sles15.noarch'
+				}
+			}
+			file {"/tmp/$packagename.rpm":
+				source => "puppet:///modules/repos/zabbix/$packagename.rpm",
+			} ~>
+			exec {"install_zabbix_repo":
+				command => "rpm -Uvh --nosignature /tmp/$packagename.rpm && zypper --gpg-auto-import-keys refresh",
+				unless => "rpm -qa | grep zabbix-release | grep 6.2",
+				path => '/bin:/sbin:/usr/bin:/usr/sbin',
+				cwd => '/tmp',
+			}
+		}
+
+		'RedHat': {
+			case $::operatingsystemmajrelease {
+				'6': {
+					$packagename='zabbix-release-6.0-4.el6.noarch'
+				}
+				'7': {
+					$packagename='zabbix-release-6.0-4.el7.noarch'
+				}
+			}
+			file {"/tmp/$packagename.rpm":
+				source => "puppet:///modules/repos/zabbix/$packagename.rpm",
+			} ~>
+			exec {"install_zabbix_repo":
+				command => "rpm -Uvh --nosignature /tmp/$packagename.rpm",
+				unless => "rpm -qa | grep zabbix-release | grep 6.0",
 				path => '/bin:/sbin:/usr/bin:/usr/sbin',
 				cwd => '/tmp',
 			}
