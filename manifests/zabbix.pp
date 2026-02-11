@@ -1,10 +1,11 @@
+#Класс монтирования репозитория заббикс
 class repos::zabbix {
   $matrix = {
-    'Debian' => {	'13' => '7.4',		'12' => '7.2',		'11' => '7.2',		'10' => '7.0',		'9'  => '6.0',	},
-    'Ubuntu' => {	'22.04' => '7.2',	'20.04' => '7.2',	'18.04' => '6.4',	'16.04' => '6.0',	},
-    'RedHat' => {	'8' => '7.2',		'7' => '6.4',		'6' => '6.0',	},
-    'CentOS' => {	'8' => '7.2',		'7' => '6.4',		'6' => '6.0',	},
-    'SLES'   => {	'15' => '7.2',	},
+    'Debian' => { '13' => '7.4', '12' => '7.2', '11' => '7.2', '10' => '7.0', '9'  => '6.0', },
+    'Ubuntu' => { '24.04' => '7.2', '22.04' => '7.2', '20.04' => '7.2', '18.04' => '6.4', '16.04' => '6.0', },
+    'RedHat' => { '8' => '7.2', '7' => '6.4', '6' => '6.0', },
+    'CentOS' => { '8' => '7.2', '7' => '6.4', '6' => '6.0', },
+    'SLES'   => { '15' => '7.2', },
   }
 
   $os        = $facts['os']['name']
@@ -22,8 +23,8 @@ class repos::zabbix {
 
       file { "/tmp/${pkg}":
         source => "puppet:///modules/repos/zabbix/${pkg}",
-      } ~>
-      exec { 'install_zabbix_repo':
+      }
+      ~> exec { 'install_zabbix_repo':
         command => "dpkg -i /tmp/${pkg} && apt update",
         unless  => "dpkg-query -W zabbix-release | grep ${ver}",
         path    => ['/bin','/usr/bin','/sbin','/usr/sbin'],
@@ -44,14 +45,20 @@ class repos::zabbix {
         unless  => '/bin/rpm -q gpg-pubkey-b5333005',
         require => File['/etc/pki/rpm-gpg/RPM-GPG-KEY-ZABBIX-B5333005'],
       }
+
       file { "/tmp/${pkg}":
         source => "puppet:///modules/repos/zabbix/${pkg}",
-      } ~>
-      exec { 'install_zabbix_repo':
+      }
+
+      ~> exec { 'install_zabbix_repo':
         command => "rpm -Uvh --nosignature /tmp/${pkg}",
         unless  => "rpm -q zabbix-release | grep ${ver}",
         path    => ['/bin','/usr/bin','/sbin','/usr/sbin'],
       }
+    }
+
+    default: {
+      raise('Unsupported OS')
     }
   }
 }

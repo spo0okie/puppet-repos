@@ -15,6 +15,7 @@ declare -A MATRIX=(
   [Debian:9]=6.0
 
   # Ubuntu
+  [Ubuntu:24.04]=7.2
   [Ubuntu:22.04]=7.2
   [Ubuntu:20.04]=7.2
   [Ubuntu:18.04]=7.0
