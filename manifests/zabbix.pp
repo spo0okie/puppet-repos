@@ -1,60 +1,57 @@
 class repos::zabbix {
+  $matrix = {
+    'Debian' => {	'13' => '7.4',		'12' => '7.2',		'11' => '7.2',		'10' => '7.0',		'9'  => '6.0',	},
+    'Ubuntu' => {	'22.04' => '7.2',	'20.04' => '7.2',	'18.04' => '6.4',	'16.04' => '6.0',	},
+    'RedHat' => {	'8' => '7.2',		'7' => '6.4',		'6' => '6.0',	},
+    'CentOS' => {	'8' => '7.2',		'7' => '6.4',		'6' => '6.0',	},
+    'SLES'   => {	'15' => '7.2',	},
+  }
 
-	case $::operatingsystem {
-#Debian и Ubuntu согласно инструкции:
-#https://www.zabbix.com/documentation/4.4/ru/manual/installation/install_from_packages/debian_ubuntu
-		'Debian': {
-			case $::operatingsystemmajrelease {
-				'11': {
-					$packagename='zabbix-release_6.2-1+debian11_all'
-				}
-				'10':  {
-					$packagename='zabbix-release_6.2-1+debian10_all'
-				}
-				'9':  {
-					$packagename='zabbix-release_6.2-1+debian9_all'
-				}
-			} 
-			file {"/tmp/$packagename.deb":
-				source => "puppet:///modules/repos/zabbix/$packagename.deb",
-			} ~>
-			exec {"install_zabbix_repo":
-				command => "dpkg -i /tmp/$packagename.deb && apt update",
-				unless => "dpkg -l | grep zabbix-release | grep 6.2",
-				path => '/bin:/sbin:/usr/bin:/usr/sbin',
-				cwd => '/tmp',
-			}
+  $os        = $facts['os']['name']
+  $release   = $facts['os']['release']['major']
+  $ver = $matrix[$os][$release]
+  $os_lc = downcase($os)
 
-		}
+  if $ver == undef {
+    fail("Zabbix: OS ${os} ${release} is not supported")
+  }
 
+  case $os {
+    'Debian','Ubuntu': {
+      $pkg = "zabbix-release_latest_${ver}+${os_lc}${release}_all.deb"
 
-		'Ubuntu': {
-			case $::operatingsystemmajrelease {
-				'22.04': {
-					$packagename='zabbix-release_6.2-1+ubuntu22.04_all'
-				}
-				'20.04': {
-					$packagename='zabbix-release_6.2-1+ubuntu20.04_all'
-				}
-				'18.04':  {
-					$packagename='zabbix-release_6.2-1+ubuntu18.04_all'
-				}
-				'16.04':  {
-					$packagename='zabbix-release_6.2-1+ubuntu16.04_all'
-				}
-				'14.04':  {
-					$packagename='zabbix-release_6.2-1+ubuntu14.04_all'
-				}
-			} 
-			file {"/tmp/$packagename.deb":
-				source => "puppet:///modules/repos/zabbix/$packagename.deb",
-			} ~>
-			exec {"install_zabbix_repo":
-				command => "dpkg -i /tmp/$packagename.deb && apt update",
-				unless => "dpkg -l | grep zabbix-release | grep 6.2",
-				path => '/bin:/sbin:/usr/bin:/usr/sbin',
-				cwd => '/tmp',
-			}
-		}
-	}
+      file { "/tmp/${pkg}":
+        source => "puppet:///modules/repos/zabbix/${pkg}",
+      } ~>
+      exec { 'install_zabbix_repo':
+        command => "dpkg -i /tmp/${pkg} && apt update",
+        unless  => "dpkg-query -W zabbix-release | grep ${ver}",
+        path    => ['/bin','/usr/bin','/sbin','/usr/sbin'],
+      }
+    }
+
+    'RedHat','CentOS','SLES': {
+      $pkg = "zabbix-release-latest-${ver}.el${release}.noarch.rpm"
+
+      file { '/etc/pki/rpm-gpg/RPM-GPG-KEY-ZABBIX-B5333005':
+        ensure => file,
+        mode   => '0644',
+        source => 'puppet:///modules/repos/zabbix/RPM-GPG-KEY-ZABBIX-B5333005',
+      }
+
+      exec { 'import-zabbix-gpg-b5333005':
+        command => '/bin/rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-ZABBIX-B5333005',
+        unless  => '/bin/rpm -q gpg-pubkey-b5333005',
+        require => File['/etc/pki/rpm-gpg/RPM-GPG-KEY-ZABBIX-B5333005'],
+      }
+      file { "/tmp/${pkg}":
+        source => "puppet:///modules/repos/zabbix/${pkg}",
+      } ~>
+      exec { 'install_zabbix_repo':
+        command => "rpm -Uvh --nosignature /tmp/${pkg}",
+        unless  => "rpm -q zabbix-release | grep ${ver}",
+        path    => ['/bin','/usr/bin','/sbin','/usr/sbin'],
+      }
+    }
+  }
 }
