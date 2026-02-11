@@ -13,7 +13,7 @@ install_dev_puppet_module_on(
 hosts.each do |host|
   apply_manifest_on(
     host,
-    'include repos',
+    'include repos::zabbix',
     catch_failures: true
   )
 end

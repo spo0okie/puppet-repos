@@ -1,0 +1,25 @@
+FROM debian:10
+#подменяем путь на archive
+RUN sed -i 's|deb.debian.org|archive.debian.org|g' /etc/apt/sources.list \
+ && sed -i '/security.debian.org/d' /etc/apt/sources.list 
+
+#подкидываем прокси и слабые проверки репозиториев
+COPY test/apt.conf /etc/apt/apt.conf.d/00test_env
+
+RUN apt-get update && apt-get install -y \
+    openssh-server openssh-client curl ntpdate lsb-release apt-transport-https ca-certificates && \
+    sed 's@session *required *pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*
+
+RUN mkdir -p /var/run/sshd && echo root:root | chpasswd
+
+RUN sed -ri -e 's/^#?PermitRootLogin .*/PermitRootLogin yes/' \
+           -e 's/^#?PasswordAuthentication .*/PasswordAuthentication yes/' \
+           -e 's/^#?UseDNS .*/UseDNS no/' \
+           -e 's/^#?UsePAM .*/UsePAM no/' \
+           -e 's/^#?MaxAuthTries.*/MaxAuthTries 1000/' /etc/ssh/sshd_config \
+           $(compgen -G '/etc/ssh/sshd_config.d/*' || echo '')
+
+EXPOSE 22
+
+# Запуск SSH демона в foreground режиме для контейнера
+CMD ["/usr/sbin/sshd", "-D"]

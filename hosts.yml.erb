@@ -1,7 +1,12 @@
 HOSTS:
-  debian11:
-    platform: debian-11-amd64
-    image: debian:11
+<% [10].each do |ver| %>
+  debian<%= ver %>:
+    platform: debian-<%= ver %>-amd64
+<% if ver.to_i == 10 %>
+    dockerfile: test/Dockerfile.debian<%= ver %>
+<% else %>
+    image: debian:<%= ver %>
+<% end %>
     hypervisor: docker
     is_container: true
     use_systemd: false
@@ -19,11 +24,9 @@ HOSTS:
     docker_image_commands:
       - mkdir -p /root/.ssh
       - chmod 700 /root/.ssh
-    #  - echo "export PATH=/opt/puppetlabs/bin:$PATH" > /root/.ssh/environment
+<% end %>
 CONFIG:
   log_level: debug
-  #set_env: false
-  puppet_collection: puppet6
   type: aio
   docker_cmd: '["/usr/sbin/sshd","-D"]'
   ssh_service_name: ssh

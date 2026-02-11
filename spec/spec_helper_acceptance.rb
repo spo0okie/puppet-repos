@@ -40,18 +40,39 @@ def provision_puppet()
       on host, 'dpkg -i /tmp/puppet.deb'
       on host, 'apt-get update'
       on host, 'apt-get install -y puppet-agent'
+      #Хак чтобы не мучаться с PATH
+      on host, 'ln -s /opt/puppetlabs/bin/puppet /usr/bin/puppet'
 
     when /debian-10/
       on host, 'wget -O /tmp/puppet.deb https://apt.puppet.com/puppet6-release-buster.deb'
       on host, 'dpkg -i /tmp/puppet.deb'
       on host, 'apt-get update'
       on host, 'apt-get install -y puppet-agent'
+      #Хак чтобы не мучаться с PATH
+      on host, 'ln -s /opt/puppetlabs/bin/puppet /usr/bin/puppet'
 
     when /debian-11/
       on host, 'wget -O /tmp/puppet.deb https://apt.puppet.com/puppet6-release-bullseye.deb'
       on host, 'dpkg -i /tmp/puppet.deb'
       on host, 'apt-get update'
       on host, 'apt-get install -y puppet-agent'
+      #Хак чтобы не мучаться с PATH
+      on host, 'ln -s /opt/puppetlabs/bin/puppet /usr/bin/puppet'
+
+    when /debian-12/
+      #on host, 'wget -O /tmp/puppet.deb https://apt.puppet.com/puppet7-release-bookworm.deb'
+      #on host, 'dpkg -i /tmp/puppet.deb'
+      #on host, 'apt-get update'
+      #on host, 'apt-get install -y puppet-agent'
+      #on host, 'ln -s /opt/puppetlabs/bin/puppet /usr/bin/puppet'
+      on host, 'apt-get install -y puppet'
+
+    when /debian-13/
+      #on host, 'wget -O /tmp/puppet.deb https://apt.puppet.com/puppet7-release-trixie.deb'
+      #on host, 'dpkg -i /tmp/puppet.deb'
+      #on host, 'apt-get update'
+      on host, 'apt-get install -y puppet'
+      #on host, 'ln -s /opt/puppetlabs/bin/puppet /usr/bin/puppet'
 
     when /centos-7/
       on host, 'rpm -Uvh https://yum.puppet.com/puppet6-release-el-7.noarch.rpm'
@@ -66,8 +87,6 @@ def provision_puppet()
     else
       raise "Unsupported platform #{host['platform']}"
     end
-    #Хак чтобы не мучаться с PATH
-    on host, 'ln -s /opt/puppetlabs/bin/puppet /usr/bin/puppet'
   end
 end
 
