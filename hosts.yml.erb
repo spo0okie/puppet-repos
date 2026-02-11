@@ -1,0 +1,30 @@
+HOSTS:
+  debian11:
+    platform: debian-11-amd64
+    image: debian:11
+    hypervisor: docker
+    is_container: true
+    use_systemd: false
+    roles:
+      - agent
+    docker_preserve_image: true
+    docker_env:
+      - http_proxy=<%= ENV.fetch('HTTP_PROXY', '') %>
+      - https_proxy=<%= ENV.fetch('HTTPS_PROXY', '') %>
+      - no_proxy=<%= ENV.fetch('NO_PROXY', '') %>
+    docker_buildargs:
+      http_proxy: <%= ENV.fetch('HTTP_PROXY', '') %>
+      https_proxy: <%= ENV.fetch('HTTPS_PROXY', '') %>
+      no_proxy: <%= ENV.fetch('NO_PROXY', '') %>
+    docker_image_commands:
+      - mkdir -p /root/.ssh
+      - chmod 700 /root/.ssh
+    #  - echo "export PATH=/opt/puppetlabs/bin:$PATH" > /root/.ssh/environment
+CONFIG:
+  log_level: debug
+  #set_env: false
+  puppet_collection: puppet6
+  type: aio
+  docker_cmd: '["/usr/sbin/sshd","-D"]'
+  ssh_service_name: ssh
+  use_sudo: false
