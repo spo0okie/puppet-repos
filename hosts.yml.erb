@@ -1,5 +1,5 @@
 HOSTS:
-<% [10,11,12,13].each do |ver| %>
+<% [9,10,11,12,13].each do |ver| %>
   debian<%= ver %>:
     platform: debian-<%= ver %>-amd64
     dockerfile: test/Dockerfile.debian<%= ver %>
