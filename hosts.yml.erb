@@ -1,12 +1,8 @@
 HOSTS:
-<% [10].each do |ver| %>
+<% [10,11,12,13].each do |ver| %>
   debian<%= ver %>:
     platform: debian-<%= ver %>-amd64
-<% if ver.to_i == 10 %>
     dockerfile: test/Dockerfile.debian<%= ver %>
-<% else %>
-    image: debian:<%= ver %>
-<% end %>
     hypervisor: docker
     is_container: true
     use_systemd: false
@@ -21,9 +17,6 @@ HOSTS:
       http_proxy: <%= ENV.fetch('HTTP_PROXY', '') %>
       https_proxy: <%= ENV.fetch('HTTPS_PROXY', '') %>
       no_proxy: <%= ENV.fetch('NO_PROXY', '') %>
-    docker_image_commands:
-      - mkdir -p /root/.ssh
-      - chmod 700 /root/.ssh
 <% end %>
 CONFIG:
   log_level: debug
