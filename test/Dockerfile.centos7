@@ -1,0 +1,68 @@
+# CentOS 7.9.2009 Dockerfile for beaker testing
+FROM centos:7.9.2009
+
+# Avoid interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Proxy settings - pass via --build-arg
+ARG http_proxy
+ARG https_proxy
+ARG no_proxy
+ENV http_proxy=${http_proxy}
+ENV https_proxy=${https_proxy}
+ENV no_proxy=${no_proxy}
+
+# Configure vault.centos.org repository with proxy
+RUN rm -f /etc/yum.repos.d/*.repo && \
+    echo '[base]' > /etc/yum.repos.d/centos-vault.repo && \
+    echo 'name=CentOS-7 - Base' >> /etc/yum.repos.d/centos-vault.repo && \
+    echo 'baseurl=http://vault.centos.org/7.9.2009/os/x86_64' >> /etc/yum.repos.d/centos-vault.repo && \
+    echo 'gpgcheck=0' >> /etc/yum.repos.d/centos-vault.repo && \
+    echo '' >> /etc/yum.repos.d/centos-vault.repo && \
+    echo '[updates]' >> /etc/yum.repos.d/centos-vault.repo && \
+    echo 'name=CentOS-7 - Updates' >> /etc/yum.repos.d/centos-vault.repo && \
+    echo 'baseurl=http://vault.centos.org/7.9.2009/updates/x86_64' >> /etc/yum.repos.d/centos-vault.repo && \
+    echo 'gpgcheck=0' >> /etc/yum.repos.d/centos-vault.repo && \
+    echo '' >> /etc/yum.repos.d/centos-vault.repo && \
+    echo '[extras]' >> /etc/yum.repos.d/centos-vault.repo && \
+    echo 'name=CentOS-7 - Extras' >> /etc/yum.repos.d/centos-vault.repo && \
+    echo 'baseurl=http://vault.centos.org/7.9.2009/extras/x86_64' >> /etc/yum.repos.d/centos-vault.repo && \
+    echo 'gpgcheck=0' >> /etc/yum.repos.d/centos-vault.repo
+
+# Install OpenSSH server and client
+RUN yum clean all && \
+    yum -y install openssh-server openssh-clients && \
+    yum clean all
+
+# Setup SSH
+RUN ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key -N '' && \
+    ssh-keygen -t ecdsa -f /etc/ssh/ssh_host_ecdsa_key -N '' && \
+    ssh-keygen -t ed25519 -f /etc/ssh/ssh_host_ed25519_key -N ''
+
+# Set root password
+RUN echo 'root:root' | chpasswd
+
+# Create .ssh directory
+RUN mkdir -p /root/.ssh && \
+    chmod 700 /root/.ssh
+
+# Copy SSH config
+RUN echo 'Host *' > /root/.ssh/config && \
+    echo '    StrictHostKeyChecking no' >> /root/.ssh/config && \
+    echo '    UserKnownHostsFile /dev/null' >> /root/.ssh/config && \
+    echo '    LogLevel QUIET' >> /root/.ssh/config && \
+    chmod 600 /root/.ssh/config
+
+# Copy apt.conf if exists (for proxy settings)
+RUN if [ -f test/apt.conf ]; then cp test/apt.conf /etc/apt.conf; fi
+
+# Configure sshd
+RUN echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config && \
+    echo 'PasswordAuthentication yes' >> /etc/ssh/sshd_config && \
+    echo 'UsePAM yes' >> /etc/ssh/sshd_config
+
+# Expose SSH port
+EXPOSE 22
+
+# Start SSH daemon
+CMD ["/usr/sbin/sshd", "-D"]

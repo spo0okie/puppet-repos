@@ -1,0 +1,55 @@
+# CentOS 6.10 Dockerfile for beaker testing
+# Last updated: 2020-11-30 (CentOS 6 EOL)
+FROM centos:6.10
+
+# Avoid interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Proxy settings - pass via --build-arg
+ARG http_proxy
+ARG https_proxy
+ARG no_proxy
+ENV http_proxy=${http_proxy}
+ENV https_proxy=${https_proxy}
+ENV no_proxy=${no_proxy}
+
+# Configure vault.centos.org repository
+RUN rm -f /etc/yum.repos.d/*.repo
+COPY files/centos6.repo /etc/yum.repos.d/centos6.repo
+
+# Install OpenSSH server and client
+RUN yum clean all && \
+    yum -y install openssh-server openssh-clients && \
+    yum clean all
+
+# Setup SSH
+RUN ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key -N '' && \
+    ssh-keygen -t ecdsa -f /etc/ssh/ssh_host_ecdsa_key -N ''
+
+# Set root password
+RUN echo 'root:root' | chpasswd
+
+# Create .ssh directory
+RUN mkdir -p /root/.ssh && \
+    chmod 700 /root/.ssh
+
+# Copy SSH config
+RUN echo 'Host *' > /root/.ssh/config && \
+    echo '    StrictHostKeyChecking no' >> /root/.ssh/config && \
+    echo '    UserKnownHostsFile /dev/null' >> /root/.ssh/config && \
+    echo '    LogLevel QUIET' >> /root/.ssh/config && \
+    chmod 600 /root/.ssh/config
+
+# Copy apt.conf if exists (for proxy settings)
+RUN if [ -f test/apt.conf ]; then cp test/apt.conf /etc/apt.conf; fi
+
+# Configure sshd
+RUN echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config && \
+    echo 'PasswordAuthentication yes' >> /etc/ssh/sshd_config && \
+    echo 'UsePAM yes' >> /etc/ssh/sshd_config
+
+# Expose SSH port
+EXPOSE 22
+
+# Start SSH daemon
+CMD ["/usr/sbin/sshd", "-D"]
