@@ -19,9 +19,12 @@ RUN rm -f /etc/yum.repos.d/*.repo || true
 # Configure local CentOS 5 repository
 COPY files/centos5.repo /etc/yum.repos.d/centos5.repo
 
-# Install OpenSSH server and client
+# Exclude i386 packages to avoid multilib issues
+RUN echo 'exclude = *.i386 *.i586 *.i686' >> /etc/yum.conf
+
+# Install OpenSSH server, client and curl
 RUN yum clean all && \
-    yum -y install openssh-server openssh-clients && \
+    yum -y install openssh-server openssh-clients curl && \
     yum clean all
 
 # Setup SSH

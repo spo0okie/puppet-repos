@@ -1,46 +1,41 @@
 HOSTS:
+<% [5,6,7].each do |ver| %>
+  centos<%= ver %>-x86_64:
+    roles: [agent]
+    platform: centos-<%= ver %>-x86_64
+    hypervisor: docker
+    dockerfile: test/Dockerfile.centos<%= ver %>
+    ip: 127.0.0.1
+    docker_preserve_image: true
+    docker_cmd: ["/usr/sbin/sshd", "-D"]
+    docker_env: &proxy_env
+      - http_proxy=<%= ENV.fetch('HTTP_PROXY', '') %>
+      - https_proxy=<%= ENV.fetch('HTTPS_PROXY', '') %>
+      - no_proxy=<%= ENV.fetch('NO_PROXY', '') %>
+    docker_buildargs: &proxy_args
+      http_proxy: <%= ENV.fetch('HTTP_PROXY', '') %>
+      https_proxy: <%= ENV.fetch('HTTPS_PROXY', '') %>
+      no_proxy: <%= ENV.fetch('NO_PROXY', '') %>
+<% end %>
 <% [9,10,11,12,13].each do |ver| %>
   debian<%= ver %>:
     platform: debian-<%= ver %>-amd64
     dockerfile: test/Dockerfile.debian<%= ver %>
     hypervisor: docker
-    is_container: true
-    use_systemd: false
-    roles:
-      - agent
-    docker_preserve_image: true
-    docker_env:
-      - http_proxy=<%= ENV.fetch('HTTP_PROXY', '') %>
-      - https_proxy=<%= ENV.fetch('HTTPS_PROXY', '') %>
-      - no_proxy=<%= ENV.fetch('NO_PROXY', '') %>
-    docker_buildargs:
-      http_proxy: <%= ENV.fetch('HTTP_PROXY', '') %>
-      https_proxy: <%= ENV.fetch('HTTPS_PROXY', '') %>
-      no_proxy: <%= ENV.fetch('NO_PROXY', '') %>
-<% end %>
-<% [5,6,7].each do |ver| %>
-  centos<%= ver %>-x86_64:
-    roles:
-      - agent
-    platform: centos-<%= ver %>-x86_64
-    dockerfile: test/Dockerfile.centos<%= ver %>
-    hypervisor: docker
-    is_container: true
-    use_systemd: false
+    ip: 127.0.0.1
     docker_preserve_image: true
     docker_cmd: ["/usr/sbin/sshd", "-D"]
-    docker_env:
-      - http_proxy=<%= ENV.fetch('HTTP_PROXY', '') %>
-      - https_proxy=<%= ENV.fetch('HTTPS_PROXY', '') %>
-      - no_proxy=<%= ENV.fetch('NO_PROXY', '') %>
-    docker_buildargs:
-      http_proxy: <%= ENV.fetch('HTTP_PROXY', '') %>
-      https_proxy: <%= ENV.fetch('HTTPS_PROXY', '') %>
-      no_proxy: <%= ENV.fetch('NO_PROXY', '') %>
+    roles:
+      - agent
+    docker_preserve_image: true
+    docker_env: *proxy_env
+    docker_buildargs: *proxy_args
 <% end %>
 CONFIG:
   log_level: debug
   type: aio
-  docker_cmd: '["/usr/sbin/sshd","-D"]'
   ssh_service_name: ssh
   use_sudo: false
+  docker_preserve_container: true
+  docker_preserve_image: true
+  ssh_connection_preference: [host]
