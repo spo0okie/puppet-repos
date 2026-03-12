@@ -19,7 +19,7 @@ COPY files/centos6.repo /etc/yum.repos.d/centos6.repo
 
 # Install OpenSSH server and client
 RUN yum clean all && \
-    yum -y install openssh-server openssh-clients && \
+    yum -y install openssh-server openssh-clients puppet-agent && \
     yum clean all
 
 # Setup SSH

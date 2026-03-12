@@ -24,7 +24,7 @@ RUN echo 'exclude = *.i386 *.i586 *.i686' >> /etc/yum.conf
 
 # Install OpenSSH server, client and curl
 RUN yum clean all && \
-    yum -y install openssh-server openssh-clients curl && \
+    yum -y install openssh-server openssh-clients curl puppet-agent && \
     yum clean all
 
 # Setup SSH

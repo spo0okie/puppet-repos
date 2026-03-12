@@ -13,27 +13,30 @@ def provision_puppet()
   raise 'HTTP_PROXY not set' unless proxy
 
   hosts.each do |host|
-    create_remote_file(
-      host,
-      '/etc/apt/apt.conf.d/00test',
-      <<~CONF
-        Acquire::http::Proxy "#{proxy}";
-        Acquire::https::Proxy "#{proxy}";
-        Acquire::AllowInsecureRepositories "true";
-        Acquire::AllowDowngradeToInsecureRepositories "true";
-        APT::Get::AllowUnauthenticated "true";
-      CONF
-    )
-    install_package(host, 'wget')
-    create_remote_file(
-      host,
-      '/etc/wgetrc',
-      <<~CONF
-        use_proxy = on
-        http_proxy = #{proxy}
-        https_proxy = #{proxy}
-      CONF
-    )
+    # Настраиваем прокси только для Debian-подобных систем
+    if host['platform'] =~ /debian|ubuntu/
+      create_remote_file(
+        host,
+        '/etc/apt/apt.conf.d/00test',
+        <<~CONF
+          Acquire::http::Proxy "#{proxy}";
+          Acquire::https::Proxy "#{proxy}";
+          Acquire::AllowInsecureRepositories "true";
+          Acquire::AllowDowngradeToInsecureRepositories "true";
+          APT::Get::AllowUnauthenticated "true";
+        CONF
+      )
+      install_package(host, 'wget')
+      create_remote_file(
+        host,
+        '/etc/wgetrc',
+        <<~CONF
+          use_proxy = on
+          http_proxy = #{proxy}
+          https_proxy = #{proxy}
+        CONF
+      )
+    end
     case host['platform']
     when /debian-9/
       on host, 'wget -O /tmp/puppet.deb https://apt.puppet.com/puppet6-release-stretch.deb'
@@ -75,11 +78,18 @@ def provision_puppet()
       #on host, 'ln -s /opt/puppetlabs/bin/puppet /usr/bin/puppet'
 
     when /centos-7/
-      on host, 'rpm -Uvh https://yum.puppet.com/puppet6-release-el-7.noarch.rpm'
+      # Настраиваем прокси для yum
+      on host, 'echo "proxy=http://klg-proxy.azimuth.holding.local:3128" >> /etc/yum.conf'
+      # Используем wget вместо curl с явным прокси
+      on host, 'wget --no-proxy -O /tmp/puppet.rpm https://yum.puppet.com/puppet6-release-el-7.noarch.rpm || curl -x http://klg-proxy.azimuth.holding.local:3128 -o /tmp/puppet.rpm https://yum.puppet.com/puppet6-release-el-7.noarch.rpm'
+      on host, 'rpm -ivh /tmp/puppet.rpm'
       on host, 'yum install -y puppet-agent'
 
     when /centos-6/
-      on host, 'rpm -Uvh https://yum.puppet.com/puppet6-release-el-6.noarch.rpm'
+      # Настраиваем прокси для yum
+      on host, 'echo "proxy=http://klg-proxy.azimuth.holding.local:3128" >> /etc/yum.conf'
+      on host, 'wget --no-proxy -O /tmp/puppet.rpm https://yum.puppet.com/puppet6-release-el-6.noarch.rpm || curl -x http://klg-proxy.azimuth.holding.local:3128 -o /tmp/puppet.rpm https://yum.puppet.com/puppet6-release-el-6.noarch.rpm'
+      on host, 'rpm -ivh /tmp/puppet.rpm'
       on host, 'yum install -y puppet-agent'
 
     when /centos-5/

@@ -13,21 +13,10 @@ ENV https_proxy=${https_proxy}
 ENV no_proxy=${no_proxy}
 
 # Configure vault.centos.org repository with proxy
-RUN rm -f /etc/yum.repos.d/*.repo && \
-    echo '[base]' > /etc/yum.repos.d/centos-vault.repo && \
-    echo 'name=CentOS-7 - Base' >> /etc/yum.repos.d/centos-vault.repo && \
-    echo 'baseurl=http://vault.centos.org/7.9.2009/os/x86_64' >> /etc/yum.repos.d/centos-vault.repo && \
-    echo 'gpgcheck=0' >> /etc/yum.repos.d/centos-vault.repo && \
-    echo '' >> /etc/yum.repos.d/centos-vault.repo && \
-    echo '[updates]' >> /etc/yum.repos.d/centos-vault.repo && \
-    echo 'name=CentOS-7 - Updates' >> /etc/yum.repos.d/centos-vault.repo && \
-    echo 'baseurl=http://vault.centos.org/7.9.2009/updates/x86_64' >> /etc/yum.repos.d/centos-vault.repo && \
-    echo 'gpgcheck=0' >> /etc/yum.repos.d/centos-vault.repo && \
-    echo '' >> /etc/yum.repos.d/centos-vault.repo && \
-    echo '[extras]' >> /etc/yum.repos.d/centos-vault.repo && \
-    echo 'name=CentOS-7 - Extras' >> /etc/yum.repos.d/centos-vault.repo && \
-    echo 'baseurl=http://vault.centos.org/7.9.2009/extras/x86_64' >> /etc/yum.repos.d/centos-vault.repo && \
-    echo 'gpgcheck=0' >> /etc/yum.repos.d/centos-vault.repo
+RUN rm -f /etc/yum.repos.d/*.repo
+
+# Configure local CentOS 7 repository
+COPY files/centos7.repo /etc/yum.repos.d/centos7.repo
 
 # Install OpenSSH server and client
 RUN yum clean all && \
