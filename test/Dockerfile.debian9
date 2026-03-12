@@ -30,7 +30,18 @@ COPY test/apt.conf /etc/apt/apt.conf.d/00test_env
 # -----------------------------------------------------------------------------
 # Устанавливаем openssh-server и openssh-client - это минимум для beaker
 # curl и libcurl3 будут установлены beaker автоматически во время валидации
-RUN apt-get update && apt-get install -y --fix-broken openssh-server openssh-client
+RUN apt-get update && apt-get install -y --fix-broken openssh-server openssh-client wget && \
+    apt-get clean
+
+# -----------------------------------------------------------------------------
+# Установка Puppet репозитория и puppet-agent
+# -----------------------------------------------------------------------------
+RUN wget -O /tmp/puppet.deb https://apt.puppet.com/puppet6-release-stretch.deb && \
+    dpkg -i /tmp/puppet.deb || true && \
+    apt-get update && \
+    apt-get install -y puppet-agent && \
+    ln -s /opt/puppetlabs/bin/puppet /usr/bin/puppet && \
+    rm -f /tmp/puppet.deb
 
 # -----------------------------------------------------------------------------
 # Настройка SSH доступа для пользователя root

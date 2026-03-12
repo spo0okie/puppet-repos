@@ -1,31 +1,31 @@
 [base]
 name=CentOS-$releasever - Base
-baseurl=http://repo.azimuth.holding.local/CENTOS/6.10/os/$basearch/
+baseurl=http://repo.azimuth.holding.local/CENTOS/6.10/os/
 gpgcheck=0
 
 #released updates.
 [updates]
 name=CentOS-$releasever - Updates
-baseurl=http://repo.azimuth.holding.local/CENTOS/6.10/updates/$basearch/
+baseurl=http://repo.azimuth.holding.local/CENTOS/6.10/updates/
 gpgcheck=0
 
 #additional packages that may be useful
 [extras]
 name=CentOS-$releasever - Extras
-baseurl=http://repo.azimuth.holding.local/CENTOS/6.10/extras/$basearch/
+baseurl=http://repo.azimuth.holding.local/CENTOS/6.10/extras/
 gpgcheck=0
 
 #additional packages that extend functionality of existing packages
 [centosplus]
 name=CentOS-$releasever - Plus
-baseurl=http://repo.azimuth.holding.local/CENTOS/6.10/centosplus/$basearch/
+baseurl=http://repo.azimuth.holding.local/CENTOS/6.10/centosplus/
 gpgcheck=0
 enabled=0
 
 #contrib - packages by Centos Users
 [contrib]
 name=CentOS-$releasever - Contrib
-baseurl=http://repo.azimuth.holding.local/CENTOS/6.10/contrib/$basearch/
+baseurl=http://repo.azimuth.holding.local/CENTOS/6.10/contrib/
 gpgcheck=0
 enabled=0
 

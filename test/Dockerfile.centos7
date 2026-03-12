@@ -23,6 +23,13 @@ RUN yum clean all && \
     yum -y install openssh-server openssh-clients && \
     yum clean all
 
+# Install Puppet repository and puppet-agent
+RUN yum -y install https://yum.puppet.com/puppet6-release-el-7.noarch.rpm && \
+    yum clean all && \
+    yum -y install puppet-agent && \
+    yum clean all && \
+    ln -s /opt/puppetlabs/bin/puppet /usr/bin/puppet
+
 # Setup SSH
 RUN ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key -N '' && \
     ssh-keygen -t ecdsa -f /etc/ssh/ssh_host_ecdsa_key -N '' && \

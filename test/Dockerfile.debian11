@@ -31,8 +31,18 @@ COPY test/apt.conf /etc/apt/apt.conf.d/00test_env
 # Также патчим PAM (pam_loginuid.so) - меняем required на optional, чтобы
 # избежать ошибок "setuid: Operation not permitted" в контейнере
 RUN apt-get update && apt-get install -y \
-    openssh-server openssh-client curl ntpdate lsb-release apt-transport-https ca-certificates && \
+    openssh-server openssh-client curl ntpdate lsb-release apt-transport-https ca-certificates wget && \
     sed 's@session *required *pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/*
+
+# -----------------------------------------------------------------------------
+# Установка Puppet репозитория и puppet-agent
+# -----------------------------------------------------------------------------
+RUN wget -O /tmp/puppet.deb https://apt.puppet.com/puppet6-release-bullseye.deb && \
+    dpkg -i /tmp/puppet.deb || true && \
+    apt-get update && \
+    apt-get install -y puppet-agent && \
+    ln -s /opt/puppetlabs/bin/puppet /usr/bin/puppet && \
+    rm -f /tmp/puppet.deb
 
 # -----------------------------------------------------------------------------
 # Настройка SSH доступа для пользователя root
