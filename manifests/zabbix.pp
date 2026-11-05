@@ -1,4 +1,4 @@
-#Класс монтирования репозитория заббикс
+# Настраивает репозиторий Zabbix до установки пакета агента из другого класса.
 class repos::zabbix {
   $matrix = {
     'Debian' => { '13' => '7.4', '12' => '7.2', '11' => '7.2', '10' => '7.0', '9'  => '6.0', },
@@ -24,10 +24,13 @@ class repos::zabbix {
       file { "/tmp/${pkg}":
         source => "puppet:///modules/repos/zabbix/${pkg}",
       }
-      ~> exec { 'install_zabbix_repo':
-        command => "dpkg -i /tmp/${pkg} && apt update",
-        unless  => "dpkg-query -W zabbix-release | grep ${ver}",
-        path    => ['/bin','/usr/bin','/sbin','/usr/sbin'],
+      -> exec { 'install_zabbix_repo':
+        command  => "dpkg -i /tmp/${pkg} && apt-get update",
+        # После apt remove версия остаётся в dpkg; сверяем статус и версию с нужным deb.
+        unless   => "test \"$(dpkg-query -W -f='\${Status} \${Version}' zabbix-release)\" = \"install ok installed $(dpkg-deb -f /tmp/${pkg} Version)\" && apt-cache show zabbix-agent2 >/dev/null 2>&1",
+        # Команда и проверка используют возможности shell: && и подстановку команд.
+        provider => shell,
+        path     => ['/bin','/usr/bin','/sbin','/usr/sbin'],
       }
     }
 
@@ -61,4 +64,7 @@ class repos::zabbix {
       raise('Unsupported OS')
     }
   }
+
+  # Коллектор задаёт порядок, если агент объявлен в каталоге отдельным модулем.
+  Exec['install_zabbix_repo'] -> Package <| title == 'zabbix-agent2' |>
 }
