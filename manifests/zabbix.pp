@@ -2,9 +2,9 @@
 class repos::zabbix {
   $matrix = {
     'Debian' => { '13' => '7.4', '12' => '7.2', '11' => '7.2', '10' => '7.0', '9'  => '6.0', },
-    'Ubuntu' => { '24.04' => '7.2', '22.04' => '7.2', '20.04' => '7.2', '18.04' => '6.4', '16.04' => '6.0', },
-    'RedHat' => { '8' => '7.2', '7' => '6.4', '6' => '6.0', },
-    'CentOS' => { '8' => '7.2', '7' => '6.4', '6' => '6.0', },
+    'Ubuntu' => { '24.04' => '7.2', '22.04' => '7.2', '20.04' => '7.2', '18.04' => '7.0', '16.04' => '7.0', },
+    'RedHat' => { '8' => '7.2', '7' => 'local', '6' => 'local', '5' => 'local', },
+    'CentOS' => { '8' => '7.2', '7' => 'local', '6' => 'local', '5' => 'local', },
     'SLES'   => { '15' => '7.2', },
   }
 
@@ -32,28 +32,40 @@ class repos::zabbix {
     }
 
     'RedHat','CentOS','SLES': {
-      $pkg = "zabbix-release-latest-${ver}.el${release}.noarch.rpm"
+      if $ver == 'local' {
+        package { 'zabbix-release':
+          ensure => absent,
+        }
 
-      file { '/etc/pki/rpm-gpg/RPM-GPG-KEY-ZABBIX-B5333005':
-        ensure => file,
-        mode   => '0644',
-        source => 'puppet:///modules/repos/zabbix/RPM-GPG-KEY-ZABBIX-B5333005',
-      }
+        file { "/etc/yum.repos.d/zabbix-centos${release}.repo":
+          ensure => file,
+          mode   => '0644',
+          source => "puppet:///modules/repos/zabbix/centos${release}.repo",
+        }
+      } else {
+        $pkg = "zabbix-release-latest-${ver}.el${release}.noarch.rpm"
 
-      exec { 'import-zabbix-gpg-b5333005':
-        command => '/bin/rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-ZABBIX-B5333005',
-        unless  => '/bin/rpm -q gpg-pubkey-b5333005',
-        require => File['/etc/pki/rpm-gpg/RPM-GPG-KEY-ZABBIX-B5333005'],
-      }
+        file { '/etc/pki/rpm-gpg/RPM-GPG-KEY-ZABBIX-B5333005':
+          ensure => file,
+          mode   => '0644',
+          source => 'puppet:///modules/repos/zabbix/RPM-GPG-KEY-ZABBIX-B5333005',
+        }
 
-      file { "/tmp/${pkg}":
-        source => "puppet:///modules/repos/zabbix/${pkg}",
-      }
+        exec { 'import-zabbix-gpg-b5333005':
+          command => '/bin/rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-ZABBIX-B5333005',
+          unless  => '/bin/rpm -q gpg-pubkey-b5333005',
+          require => File['/etc/pki/rpm-gpg/RPM-GPG-KEY-ZABBIX-B5333005'],
+        }
 
-      ~> exec { 'install_zabbix_repo':
-        command => "rpm -Uvh --nosignature /tmp/${pkg}",
-        unless  => "rpm -q zabbix-release | grep ${ver}",
-        path    => ['/bin','/usr/bin','/sbin','/usr/sbin'],
+        file { "/tmp/${pkg}":
+          source => "puppet:///modules/repos/zabbix/${pkg}",
+        }
+
+        ~> exec { 'install_zabbix_repo':
+          command => "rpm -Uvh --nosignature /tmp/${pkg}",
+          unless  => "rpm -q zabbix-release | grep ${ver}",
+          path    => ['/bin','/usr/bin','/sbin','/usr/sbin'],
+        }
       }
     }
 
