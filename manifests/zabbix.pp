@@ -25,7 +25,9 @@ class repos::zabbix {
         source => "puppet:///modules/repos/zabbix/${pkg}",
       }
       -> exec { 'install_zabbix_repo':
-        command  => "dpkg -i /tmp/${pkg} && apt-get update",
+        # При смене ОС принимаем конфигурацию репозитория из deb без вопросов dpkg.
+        # Восстанавливаем также отсутствующие конфигурационные файлы этого пакета.
+        command  => "dpkg --force-confnew --force-confmiss -i /tmp/${pkg} && apt-get update",
         # После apt remove версия остаётся в dpkg; сверяем статус и версию с нужным deb.
         unless   => "test \"$(dpkg-query -W -f='\${Status} \${Version}' zabbix-release)\" = \"install ok installed $(dpkg-deb -f /tmp/${pkg} Version)\" && apt-cache show zabbix-agent2 >/dev/null 2>&1",
         # Команда и проверка используют возможности shell: && и подстановку команд.
