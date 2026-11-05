@@ -27,8 +27,9 @@ class repos::zabbix {
       -> exec { 'install_zabbix_repo':
         # При смене ОС принимаем конфигурацию репозитория из deb без вопросов dpkg.
         # Восстанавливаем также отсутствующие конфигурационные файлы этого пакета.
+        # confask вместе с confnew заменяет изменённые конфиги и при той же версии deb.
         # Ошибки загрузки индексов и отсутствие агента должны прерывать настройку репозитория.
-        command  => "dpkg --force-confnew --force-confmiss -i /tmp/${pkg} && apt-get -o APT::Update::Error-Mode=any update && apt-cache show zabbix-agent2 >/dev/null",
+        command  => "dpkg --force-confask --force-confnew --force-confmiss -i /tmp/${pkg} && apt-get -o APT::Update::Error-Mode=any update && apt-cache show zabbix-agent2 >/dev/null",
         # После apt remove версия остаётся в dpkg; сверяем статус и версию с нужным deb.
         unless   => "test \"$(dpkg-query -W -f='\${Status} \${Version}' zabbix-release)\" = \"install ok installed $(dpkg-deb -f /tmp/${pkg} Version)\" && apt-cache show zabbix-agent2 >/dev/null 2>&1",
         # Команда и проверка используют возможности shell: && и подстановку команд.
